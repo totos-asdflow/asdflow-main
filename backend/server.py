@@ -550,35 +550,40 @@ async def tts(body: TTSRequest):
         b64: Optional[str] = None
         google_api_key = os.getenv("GOOGLE_API_KEY")
         if google_api_key:
-            import httpx
+            try:
+                import httpx
 
-            language_code, voice_name = GOOGLE_TTS_VOICES.get(
-                body.lang, ("en-US", "en-US-Wavenet-D")
-            )
-            payload = {
-                "input": {"text": text},
-                "voice": {"languageCode": language_code, "name": voice_name},
-                "audioConfig": {"audioEncoding": "MP3", "speakingRate": 0.95},
-            }
-            async with httpx.AsyncClient(timeout=20) as client:
-                response = await client.post(
-                    f"https://texttospeech.googleapis.com/v1/text:synthesize?key={google_api_key}",
-                    json=payload,
+                language_code, voice_name = GOOGLE_TTS_VOICES.get(
+                    body.lang, ("en-US", "en-US-Wavenet-D")
                 )
-            if response.status_code != 200:
-                raise HTTPException(
-                    502,
-                    f"Google TTS failed {response.status_code}: {response.text}",
-                )
-            data = response.json()
-            b64 = data.get("audioContent")
+                payload = {
+                    "input": {"text": text},
+                    "voice": {"languageCode": language_code, "name": voice_name},
+                    "audioConfig": {"audioEncoding": "MP3", "speakingRate": 0.95},
+                }
+                async with httpx.AsyncClient(timeout=20) as client:
+                    response = await client.post(
+                        f"https://texttospeech.googleapis.com/v1/text:synthesize?key={google_api_key}",
+                        json=payload,
+                    )
+                if response.status_code == 200:
+                    data = response.json()
+                    b64 = data.get("audioContent")
+                else:
+                    logger.warning(
+                        "Google TTS failed %s: %s",
+                        response.status_code,
+                        response.text,
+                    )
+            except Exception as e:
+                logger.warning("Google TTS request error: %s", e)
 
         if not b64:
             api_key = os.getenv("EMERGENT_LLM_KEY") or os.getenv("OPENAI_API_KEY")
             if not api_key:
                 raise HTTPException(
                     500,
-                    "Set GOOGLE_API_KEY or EMERGENT_LLM_KEY or OPENAI_API_KEY in backend/.env",
+                    "Google TTS failed and no EMERGENT_LLM_KEY or OPENAI_API_KEY is configured.",
                 )
 
             try:
