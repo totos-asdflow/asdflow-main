@@ -11,9 +11,9 @@ export const SUPPORTED_LANGS: { code: Lang; label: string; flag: string }[] = [
 
 const baseEl = {
   appTitle: 'Η Ρουτίνα μου',
-  welcomeTitle: 'Καλώς ήρθες!',
-  welcomeDesc: 'Γράψε το όνομά σου και πάτησε το πράσινο κουμπί για να ξεκινήσει.',
-  welcomeStart: 'Για να ξεκινήσει',
+  welcomeTitle: 'Καλώς ήρθες,',
+  welcomeDesc: 'γράψε το όνομά σου και πάτησε το πράσινο κουμπί για να ξεκινήσεις.',
+  welcomeStart: 'Ξεκίνα',
   chooseLang: 'Επίλεξε γλώσσα',
   chooseRoutine: 'Διάλεξε μια ρουτίνα',
   start: 'Ξεκίνα',

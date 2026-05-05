@@ -20,7 +20,7 @@ import { colors, radius, spacing } from '../src/theme';
 
 export default function Home() {
   const router = useRouter();
-  const { t, lang, ready, voiceEnabled } = useApp();
+  const { t, lang, ready, voiceEnabled, userId } = useApp();
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -63,6 +63,7 @@ export default function Home() {
       lang,
       enabled: voiceEnabled,
       autoplay: false,
+      userId,
     });
 
     return (

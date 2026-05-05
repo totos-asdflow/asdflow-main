@@ -21,7 +21,7 @@ import { colors, radius, spacing } from '../../src/theme';
 export default function RoutineFlow() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { lang, t } = useApp();
+  const { lang, t, userId } = useApp();
   const [routine, setRoutine] = useState<Routine | null>(null);
   const [stepIndex, setStepIndex] = useState(0);
   const [finished, setFinished] = useState(false);
@@ -61,6 +61,7 @@ export default function RoutineFlow() {
         <FinishedScreen
           onHome={() => router.replace('/')}
           onBack={routine.steps.length > 0 ? () => setFinished(false) : null}
+          userId={userId}
         />
       </SafeAreaView>
     );
@@ -99,6 +100,7 @@ export default function RoutineFlow() {
         onPrev={stepIndex > 0 ? goPrev : null}
         onSOS={onSOS}
         onAdvance={advance}
+        userId={userId}
       />
     </SafeAreaView>
   );
@@ -116,6 +118,7 @@ function TaskView({
   onPrev,
   onSOS,
   onAdvance,
+  userId,
 }: {
   step: any;
   title: string;
@@ -128,6 +131,7 @@ function TaskView({
   onPrev: (() => void) | null;
   onSOS: () => void;
   onAdvance: () => void;
+  userId: string | null;
 }) {
   const { t, voiceEnabled } = useApp();
   const [showCheck, setShowCheck] = useState(false);
@@ -137,6 +141,7 @@ function TaskView({
     recording,
     enabled: voiceEnabled && !showCheck,
     autoplay: true,
+    userId,
   });
 
   const handleDone = () => {
@@ -213,6 +218,7 @@ function TaskView({
             lang={lang}
             onPick={onAdvance}
             onPrev={onPrev}
+            userId={userId}
           />
         ) : (
           <View style={styles.actionRow}>
@@ -247,9 +253,11 @@ function TaskView({
 function FinishedScreen({
   onHome,
   onBack,
+  userId,
 }: {
   onHome: () => void;
   onBack: (() => void) | null;
+  userId: string | null;
 }) {
   const { t, lang, voiceEnabled } = useApp();
   useSpeak({
@@ -257,6 +265,7 @@ function FinishedScreen({
     lang,
     enabled: voiceEnabled,
     autoplay: true,
+    userId,
   });
   return (
     <View style={styles.doneWrap}>
@@ -283,11 +292,13 @@ function ChoiceOptions({
   lang,
   onPick,
   onPrev,
+  userId,
 }: {
   options: any[];
   lang: Lang;
   onPick: () => void;
   onPrev?: (() => void) | null;
+  userId: string | null;
 }) {
   const { t, voiceEnabled } = useApp();
   const [chosen, setChosen] = useState<string | null>(null);
@@ -297,11 +308,12 @@ function ChoiceOptions({
     lang,
     enabled: voiceEnabled && !chosen,
     autoplay: true,
+    userId,
   });
 
   if (chosen) {
     const opt = options.find((o) => o.id === chosen);
-    return <CalmedView opt={opt} lang={lang} onDone={onPick} onBack={() => setChosen(null)} />;
+    return <CalmedView opt={opt} lang={lang} onDone={onPick} onBack={() => setChosen(null)} userId={userId} />;
   }
 
   return (
@@ -344,14 +356,16 @@ function CalmedView({
   lang,
   onDone,
   onBack,
+  userId,
 }: {
   opt: any;
   lang: Lang;
   onDone: () => void;
   onBack: () => void;
+  userId: string | null;
 }) {
   const { t, voiceEnabled } = useApp();
-  useSpeak({ text: t('calm'), lang, enabled: voiceEnabled, autoplay: true });
+  useSpeak({ text: t('calm'), lang, enabled: voiceEnabled, autoplay: true, userId });
   return (
     <View style={styles.calmWrap}>
       <Text style={styles.calmTitle}>{t('calm')}</Text>

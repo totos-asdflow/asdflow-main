@@ -1,7 +1,15 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { createAudioPlayer, AudioPlayer } from 'expo-audio';
+import * as FileSystem from 'expo-file-system';
+import { documentDirectory } from 'expo-file-system';
 import { api } from './api';
 import type { Lang } from './i18n';
+
+function getAudioFilePath(userId: string | undefined, key: string): string | null {
+  if (!documentDirectory) return null; // Web or no file system
+  const baseDir = userId ? `${documentDirectory}audio/${userId}/` : `${documentDirectory}audio/global/`;
+  return `${baseDir}${key.replace(/[^a-zA-Z0-9]/g, '_')}.mp3`;
+}
 
 /**
  * Returns {speak, isPlaying} for playing a step's parent recording
@@ -13,8 +21,9 @@ export function useSpeak(opts: {
   recording?: string | null;
   enabled: boolean;
   autoplay?: boolean;
+  userId?: string;
 }) {
-  const { text, lang, recording, enabled, autoplay = true } = opts;
+  const { text, lang, recording, enabled, autoplay = true, userId } = opts;
   const playerRef = useRef<AudioPlayer | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const activeKeyRef = useRef<string>('');
@@ -60,6 +69,15 @@ export function useSpeak(opts: {
       return;
     }
 
+    const localPath = getAudioFilePath(userId, key);
+    if (localPath) {
+      const fileInfo = await FileSystem.getInfoAsync(localPath);
+      if (fileInfo.exists) {
+        await playUri(localPath);
+        return;
+      }
+    }
+
     const cached = ttsCacheRef.current[key];
     if (cached) {
       await playUri(cached);
@@ -70,24 +88,21 @@ export function useSpeak(opts: {
       const result = await api.tts(text, lang);
       if (result?.audio) {
         ttsCacheRef.current[key] = result.audio;
-        await playUri(result.audio);
+        if (localPath) {
+          // Ensure directory exists
+          const dir = localPath.substring(0, localPath.lastIndexOf('/'));
+          await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
+          // Download and save the audio
+          await FileSystem.downloadAsync(result.audio, localPath);
+          await playUri(localPath);
+        } else {
+          await playUri(result.audio);
+        }
       }
     } catch (e) {
       console.log('tts fetch error', e);
     }
-  }, [enabled, text, lang, recording, playUri]);
-
-  // Auto-play on text change
-  useEffect(() => {
-    if (!autoplay) return;
-    speak();
-    return () => {
-      activeKeyRef.current = '';
-      releasePlayer();
-      setIsPlaying(false);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [text, lang, recording, enabled]);
+  }, [enabled, text, lang, recording, playUri, userId]);
 
   useEffect(() => () => releasePlayer(), [releasePlayer]);
 

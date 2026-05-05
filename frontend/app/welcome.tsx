@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,6 @@ import {
   ScrollView,
   Dimensions,
   TextInput,
-  Pressable,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -31,12 +30,17 @@ export default function Welcome() {
   const scrollRef = useRef<ScrollView>(null);
 
   const welcomeMessage = `${t('welcomeTitle')} ${t('welcomeDesc')}`;
-  const { speak, isPlaying } = useSpeak({
+  const { speak } = useSpeak({
     text: welcomeMessage,
     lang,
     enabled: true,
     autoplay: true,
   });
+
+  // Auto-play on mount
+  useEffect(() => {
+    speak();
+  }, [speak]);
 
   const isSmallScreen = SCREEN_W <= 360;
   const contentWidth = Math.min(680, SCREEN_W - spacing.lg);
@@ -191,18 +195,6 @@ export default function Welcome() {
             </LinearGradient>
           </TouchableOpacity>
 
-          <Pressable
-            testID="welcome-speak"
-            onPress={speak}
-            style={[styles.welcomeListenBtn, isPlaying && styles.welcomeListenBtnActive]}
-            hitSlop={10}
-          >
-            <Ionicons
-              name={isPlaying ? 'volume-high' : 'volume-medium-outline'}
-              size={24}
-              color="#FFFFFF"
-            />
-          </Pressable>
         </ScrollView>
       </SafeAreaView>
     </LinearGradient>
@@ -375,23 +367,6 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     paddingHorizontal: 28,
     minHeight: 64,
-  },
-  welcomeListenBtn: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#6EA896',
-    marginTop: spacing.md,
-    shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
-  },
-  welcomeListenBtnActive: {
-    backgroundColor: '#8EC3B9',
   },
   startBtnText: {
     color: '#FDFBF7',
