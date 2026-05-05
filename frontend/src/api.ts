@@ -1,6 +1,6 @@
 import type { Lang } from './i18n';
 
-const BASE = "https://fantastic-guacamole-vpvgr4r7w9553x796-8000.app.github.dev";
+const BASE = "https://asdflow-main-users.onrender.com";
 let CURRENT_USER_ID: string | null = null;
 
 export function setCurrentUserId(id: string | null) {
