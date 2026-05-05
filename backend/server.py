@@ -520,6 +520,16 @@ class TTSRequest(BaseModel):
     lang: LangCode = "el"
 
 
+GOOGLE_TTS_VOICES: dict[str, tuple[str, str]] = {
+    "el": ("el-GR", "el-GR-Standard-A"),
+    "en": ("en-US", "en-US-Wavenet-D"),
+    "es": ("es-ES", "es-ES-Wavenet-B"),
+    "fr": ("fr-FR", "fr-FR-Wavenet-B"),
+    "de": ("de-DE", "de-DE-Wavenet-B"),
+    "it": ("it-IT", "it-IT-Wavenet-B"),
+}
+
+
 def _tts_cache_key(text: str, lang: str) -> str:
     return hashlib.sha256(f"{lang}::{text}::nova::0.9::tts-1-hd".encode("utf-8")).hexdigest()
 
@@ -536,30 +546,57 @@ async def tts(body: TTSRequest):
     if cached:
         return {"audio": cached["data"], "cached": True}
 
-    # Generate
     try:
-        api_key = os.getenv("EMERGENT_LLM_KEY") or os.getenv("OPENAI_API_KEY")
-        if not api_key:
-            raise HTTPException(500, "Set EMERGENT_LLM_KEY or OPENAI_API_KEY in backend/.env")
-
         b64: Optional[str] = None
-        # Try emergentintegrations first (works on Emergent platform)
-        try:
-            from emergentintegrations.llm.openai import OpenAITextToSpeech  # type: ignore
-            tts_client = OpenAITextToSpeech(api_key=api_key)
-            b64 = await tts_client.generate_speech_base64(
-                text=text, model="tts-1-hd", voice="nova", speed=0.9,
+        google_api_key = os.getenv("GOOGLE_API_KEY")
+        if google_api_key:
+            import httpx
+
+            language_code, voice_name = GOOGLE_TTS_VOICES.get(
+                body.lang, ("en-US", "en-US-Wavenet-D")
             )
-        except ImportError:
-            # Fallback: use openai library directly (works locally with OPENAI_API_KEY)
-            import base64
-            from openai import AsyncOpenAI
-            client = AsyncOpenAI(api_key=api_key)
-            speech = await client.audio.speech.create(
-                model="tts-1-hd", voice="nova", input=text, speed=0.9,
-            )
-            audio_bytes = speech.read() if hasattr(speech, "read") else speech.content
-            b64 = base64.b64encode(audio_bytes).decode("utf-8")
+            payload = {
+                "input": {"text": text},
+                "voice": {"languageCode": language_code, "name": voice_name},
+                "audioConfig": {"audioEncoding": "MP3", "speakingRate": 0.95},
+            }
+            async with httpx.AsyncClient(timeout=20) as client:
+                response = await client.post(
+                    f"https://texttospeech.googleapis.com/v1/text:synthesize?key={google_api_key}",
+                    json=payload,
+                )
+            if response.status_code != 200:
+                raise HTTPException(
+                    502,
+                    f"Google TTS failed {response.status_code}: {response.text}",
+                )
+            data = response.json()
+            b64 = data.get("audioContent")
+
+        if not b64:
+            api_key = os.getenv("EMERGENT_LLM_KEY") or os.getenv("OPENAI_API_KEY")
+            if not api_key:
+                raise HTTPException(
+                    500,
+                    "Set GOOGLE_API_KEY or EMERGENT_LLM_KEY or OPENAI_API_KEY in backend/.env",
+                )
+
+            try:
+                from emergentintegrations.llm.openai import OpenAITextToSpeech  # type: ignore
+                tts_client = OpenAITextToSpeech(api_key=api_key)
+                b64 = await tts_client.generate_speech_base64(
+                    text=text, model="tts-1-hd", voice="nova", speed=0.9,
+                )
+            except ImportError:
+                import base64
+                from openai import AsyncOpenAI
+
+                client = AsyncOpenAI(api_key=api_key)
+                speech = await client.audio.speech.create(
+                    model="tts-1-hd", voice="nova", input=text, speed=0.9,
+                )
+                audio_bytes = speech.read() if hasattr(speech, "read") else speech.content
+                b64 = base64.b64encode(audio_bytes).decode("utf-8")
 
         if not b64:
             raise HTTPException(500, "TTS produced no audio")
