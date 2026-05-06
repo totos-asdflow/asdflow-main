@@ -3,7 +3,7 @@ import type { Lang } from './i18n';
 const BASE =
   process.env.EXPO_PUBLIC_API_BASE_URL ||
   process.env.API_BASE_URL ||
-  "https://supreme-space-cod-779xj6pvrj692w57q-8000.app.github.dev";
+  "https://asdflow-main-users.onrender.com";
 let CURRENT_USER_ID: string | null = null;
 
 export function setCurrentUserId(id: string | null) {
@@ -112,6 +112,7 @@ export const api = {
   getActiveSOS: () => req('/sos/active') as Promise<SOSEvent | null>,
   resolveSOS: (id: string) => req(`/sos/${id}/resolve`, { method: 'POST' }),
   listSOS: () => req('/sos') as Promise<SOSEvent[]>,
+  clearSOS: () => req('/sos', { method: 'DELETE' }),
 
   getSettings: () => req('/settings') as Promise<Settings>,
   updateSettings: (body: Partial<Settings>) =>

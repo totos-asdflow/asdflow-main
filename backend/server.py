@@ -288,6 +288,12 @@ async def list_sos():
     return [SOSEvent(**d) for d in docs]
 
 
+@api_router.delete("/sos")
+async def clear_sos_history():
+    await db.sos_events.delete_many({"resolved": True})
+    return {"ok": True}
+
+
 # ===== Settings =====
 @api_router.get("/settings", response_model=Settings)
 async def get_settings():

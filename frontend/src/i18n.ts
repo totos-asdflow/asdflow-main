@@ -90,6 +90,8 @@ const baseEl = {
   generateCode: 'Δημιούργησε κωδικό',
   pairedDevices: 'Συνδεδεμένες συσκευές',
   sosHistory: 'Ιστορικό SOS',
+  clearHistory: 'Καθαρισμός ιστορικού',
+  noSosHistory: 'Καμία ειδοποίηση',
   pairAsParent: 'Είμαι ο γονέας',
   enterCode: 'Βάλε τον κωδικό',
   paired: 'Συνδέθηκε!',

@@ -253,6 +253,28 @@ export default function SettingsScreen() {
             ))}
 
             <Text style={[styles.label, { marginTop: spacing.md }]}>{t('sosHistory')}</Text>
+            {history.length > 0 && (
+              <TouchableOpacity
+                testID="settings-clear-history"
+                style={styles.altBtn}
+                onPress={async () => {
+                  Alert.alert(t('confirmDelete'), t('clearHistory'), [
+                    { text: t('cancel'), style: 'cancel' },
+                    {
+                      text: t('delete'),
+                      style: 'destructive',
+                      onPress: async () => {
+                        await api.clearSOS();
+                        load();
+                      },
+                    },
+                  ]);
+                }}
+              >
+                <Ionicons name="trash-outline" size={18} color={colors.admin.primary} />
+                <Text style={styles.altBtnText}>{t('clearHistory')}</Text>
+              </TouchableOpacity>
+            )}
             {history.length === 0 && (
               <Text style={styles.emptyText}>{t('noSosHistory')}</Text>
             )}
