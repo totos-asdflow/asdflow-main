@@ -3,7 +3,7 @@ import type { Lang } from './i18n';
 const BASE =
   process.env.EXPO_PUBLIC_API_BASE_URL ||
   process.env.API_BASE_URL ||
-  "https://supreme-space-cod-779xj6pvrj692w57q-8000.app.github.dev";
+  "https://asdflow-main-users.onrender.com";
 let CURRENT_USER_ID: string | null = null;
 
 export function setCurrentUserId(id: string | null) {
