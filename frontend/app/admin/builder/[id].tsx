@@ -271,6 +271,23 @@ export default function Builder() {
                 <Text style={styles.stepTitle}>
                   {lang === 'el' ? s.title_el : s.title_en}
                 </Text>
+                {s.type === 'choice' && s.options && s.options.length > 0 && (
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ gap: 4, marginTop: 4 }}
+                  >
+                    {s.options.map((o, i) =>
+                      !!o.image && (
+                        <Image
+                          key={i}
+                          source={{ uri: o.image }}
+                          style={styles.optionThumb}
+                        />
+                      )
+                    )}
+                  </ScrollView>
+                )}
               </View>
               {!!s.image && (
                 <Image source={{ uri: s.image }} style={styles.thumb} />
@@ -457,7 +474,7 @@ export default function Builder() {
                                 }}
                                 onBlur={() => updateStep(editing)}
                               />
-                              <View style={{ flexDirection: 'row', gap: 6 }}>
+                              <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
                                 <TouchableOpacity
                                   testID={`option-image-upload-${idx}`}
                                   style={styles.altBtn}
@@ -487,9 +504,9 @@ export default function Builder() {
                                 >
                                   <Ionicons name="trash-outline" size={18} color={colors.admin.danger} />
                                 </TouchableOpacity>
+                                {!!o.image && <Image source={{ uri: o.image }} style={styles.thumb} />}
                               </View>
                             </View>
-                            {!!o.image && <Image source={{ uri: o.image }} style={styles.thumb} />}
                           </View>
                         ))}
                       </>
@@ -592,6 +609,7 @@ const styles = StyleSheet.create({
   stepIdx: { fontSize: 11, fontWeight: '700', color: colors.admin.textSecondary, textTransform: 'uppercase' },
   stepTitle: { fontSize: 15, fontWeight: '600', color: colors.admin.text, marginTop: 2 },
   thumb: { width: 44, height: 44, borderRadius: 8 },
+  optionThumb: { width: 24, height: 24, borderRadius: 4 },
   stepBtnCol: { flexDirection: 'column' },
   smallBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   modalRoot: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'flex-end' },
