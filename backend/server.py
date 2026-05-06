@@ -222,6 +222,14 @@ async def list_assets():
     return [Asset(**d) for d in docs]
 
 
+@api_router.get("/assets/{asset_id}", response_model=Asset)
+async def get_asset(asset_id: str):
+    doc = await db.assets.find_one({"id": asset_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(404, "Asset not found")
+    return Asset(**doc)
+
+
 @api_router.post("/assets", response_model=Asset)
 async def create_asset(body: AssetCreate):
     obj = Asset(**body.dict())

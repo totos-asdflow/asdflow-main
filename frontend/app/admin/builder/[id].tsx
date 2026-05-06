@@ -88,13 +88,18 @@ export default function Builder() {
 
   const save = async (next: Routine) => {
     setRoutine(next);
-    await api.updateRoutine(next.id, {
-      name_el: next.name_el,
-      name_en: next.name_en,
-      color: next.color,
-      icon: next.icon,
-      steps: next.steps,
-    });
+    try {
+      await api.updateRoutine(next.id, {
+        name_el: next.name_el,
+        name_en: next.name_en,
+        color: next.color,
+        icon: next.icon,
+        steps: next.steps,
+      });
+    } catch (e) {
+      Alert.alert('Error', 'Failed to save routine');
+      console.error(e);
+    }
   };
 
   if (!routine) return <SafeAreaView style={styles.container} />;
@@ -147,9 +152,7 @@ export default function Builder() {
     const res = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       base64: true,
-      quality: 0.6,
-      allowsEditing: true,
-      aspect: [1, 1],
+      quality: 0.3,
     });
     if (res.canceled || !res.assets[0]) return;
     const a = res.assets[0];
@@ -465,6 +468,14 @@ export default function Builder() {
                                 >
                                   <Ionicons name="cloud-upload-outline" size={16} color={colors.admin.primary} />
                                   <Text style={styles.altBtnText}>{t('uploadImage')}</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                  testID={`option-image-library-${idx}`}
+                                  style={styles.altBtn}
+                                  onPress={() => openAssetPicker('option', idx)}
+                                >
+                                  <Ionicons name="images-outline" size={16} color={colors.admin.primary} />
+                                  <Text style={styles.altBtnText}>{t('pickFromLibrary')}</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                   testID={`option-delete-${idx}`}

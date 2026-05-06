@@ -3,7 +3,7 @@ import type { Lang } from './i18n';
 const BASE =
   process.env.EXPO_PUBLIC_API_BASE_URL ||
   process.env.API_BASE_URL ||
-  "https://asdflow-main-users.onrender.com";
+  "https://supreme-space-cod-779xj6pvrj692w57q-8000.app.github.dev";
 let CURRENT_USER_ID: string | null = null;
 
 export function setCurrentUserId(id: string | null) {
@@ -102,6 +102,7 @@ export const api = {
   deleteRoutine: (id: string) => req(`/routines/${id}`, { method: 'DELETE' }),
 
   listAssets: () => req('/assets') as Promise<Asset[]>,
+  getAsset: (id: string) => req(`/assets/${id}`) as Promise<Asset>,
   createAsset: (name: string, data: string) =>
     req('/assets', { method: 'POST', body: JSON.stringify({ name, data }) }) as Promise<Asset>,
   deleteAsset: (id: string) => req(`/assets/${id}`, { method: 'DELETE' }),
